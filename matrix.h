@@ -20,6 +20,7 @@ bool readMatrix(char* adr, Matrix m)
 	m.cols = 0;
 	m.rows = 0;
 	char* c;
+	char* pc;
 	char* buf;
 	double tmp;
 	int col = 0;
@@ -27,6 +28,7 @@ bool readMatrix(char* adr, Matrix m)
 	int row = 0;
 	size_t len = 0;
 
+	pc = c; // strtok changes line
 	while(getline(&c,&len,M) != -1)
 	{
 		prevcol = col;
@@ -46,17 +48,19 @@ bool readMatrix(char* adr, Matrix m)
 	double** elem = new double*[m.cols];
 	for (int i = 0; i < m.cols; i++)
 		elem[i] = new double[m.rows];
-	while(getline(&c,&len,M) != -1)
+		
+	while(getline(&pc,&len,M) != -1)
 	{
 		prevcol = col;
 		col = 0;
-		buf = strtok(c, " ");
+		buf = strtok(pc, " ");
 		while(buf != NULL)
 		{
-			std::stringstream ss(buf);
-			ss >> tmp;
-			elem[col][row] = tmp;
-			cout << "elem ";
+			//std::stringstream ss(buf);
+			//ss >> tmp;
+			//sscanf( buf, "%lf",  &tmp );
+			//elem[col][row] = atof(buf);//tmp;
+			cout << buf << "\n";
 			col ++;
 			buf = strtok(NULL, "");
 		}
@@ -65,12 +69,11 @@ bool readMatrix(char* adr, Matrix m)
 		if ((prevcol != col) && (row != 1)) return false;
 		cout << "c: " << col << " r: " << row << "\n";
 	}
-	char* cc;
+
 	for (int i = 0; i < m.rows; i++)
 		for (int j = 0; j < m.cols; j++)
 		{
-			printf("%f ",elem[i][j]);
-			//cout << (char*)(elem[j][i]) << " ";
+			printf("[%d][%d] %f ", i, j, elem[i][j]);
 			cout << "\n";
 		}
 }
