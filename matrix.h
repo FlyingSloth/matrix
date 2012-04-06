@@ -20,61 +20,49 @@ bool readMatrix(char* adr, Matrix m)
 	m.cols = 0;
 	m.rows = 0;
 	char* c;
-	char* pc;
 	char* buf;
-	double tmp;
+	double tmp[1000];
 	int col = 0;
 	int prevcol = 0;
 	int row = 0;
+	int count = 0;
 	size_t len = 0;
 
-	pc = c; // strtok changes line
 	while(getline(&c,&len,M) != -1)
 	{
+		cout << c << "\n";
 		prevcol = col;
-		col = 1;
+		col = 0;
 		buf = strtok(c, " ");
 		while(buf != NULL)
 		{
+			tmp[count] = atof(buf);
+			count++;
 			col ++;
-			buf = strtok(NULL, "");
+			buf = strtok(NULL, " ");
 		}
 		row ++;
 		if ((prevcol != col) && (row != 1)) return false;
 	}
+
 	m.cols = col;
 	m.rows = row;
 	
-	double** elem = new double*[m.cols];
+	m.matr = new double*[m.cols];
 	for (int i = 0; i < m.cols; i++)
-		elem[i] = new double[m.rows];
+		m.matr[i] = new double[m.rows];
 		
-	while(getline(&pc,&len,M) != -1)
-	{
-		prevcol = col;
-		col = 0;
-		buf = strtok(pc, " ");
-		while(buf != NULL)
-		{
-			//std::stringstream ss(buf);
-			//ss >> tmp;
-			//sscanf( buf, "%lf",  &tmp );
-			//elem[col][row] = atof(buf);//tmp;
-			cout << buf << "\n";
-			col ++;
-			buf = strtok(NULL, "");
-		}
-		cout << "\n";
-		row ++;
-		if ((prevcol != col) && (row != 1)) return false;
-		cout << "c: " << col << " r: " << row << "\n";
-	}
-
 	for (int i = 0; i < m.rows; i++)
 		for (int j = 0; j < m.cols; j++)
 		{
-			printf("[%d][%d] %f ", i, j, elem[i][j]);
-			cout << "\n";
+			m.matr[i][j] = tmp[j+i*m.cols];
 		}
+
+	/*for (int i = 0; i < m.rows; i++)
+		for (int j = 0; j < m.cols; j++)
+		{
+			printf("[%d][%d] %f ", i, j, m.matr[i][j]);
+			cout << "\n";
+		}*/
 }
 
