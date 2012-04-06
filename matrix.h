@@ -13,7 +13,7 @@ struct Matrix
 	int cols, rows;
 };
 
-bool readMatrix(char* adr, Matrix m)
+Matrix readMatrix(char* adr, Matrix m)
 {
 	FILE *M;
 	M = fopen(adr, "r");
@@ -21,7 +21,7 @@ bool readMatrix(char* adr, Matrix m)
 	m.rows = 0;
 	char* c;
 	char* buf;
-	double tmp[1000];
+	double* tmp = new double[1000];
 	int col = 0;
 	int prevcol = 0;
 	int row = 0;
@@ -30,7 +30,6 @@ bool readMatrix(char* adr, Matrix m)
 
 	while(getline(&c,&len,M) != -1)
 	{
-		cout << c << "\n";
 		prevcol = col;
 		col = 0;
 		buf = strtok(c, " ");
@@ -42,7 +41,7 @@ bool readMatrix(char* adr, Matrix m)
 			buf = strtok(NULL, " ");
 		}
 		row ++;
-		if ((prevcol != col) && (row != 1)) return false;
+		if ((prevcol != col) && (row != 1)) {cout << "Wrong array size!\n"; exit(1);};
 	}
 
 	m.cols = col;
@@ -57,7 +56,9 @@ bool readMatrix(char* adr, Matrix m)
 		{
 			m.matr[i][j] = tmp[j+i*m.cols];
 		}
+	delete[] tmp;
 
+	return m;
 	/*for (int i = 0; i < m.rows; i++)
 		for (int j = 0; j < m.cols; j++)
 		{
