@@ -7,6 +7,7 @@
 #include "sstream"
 using namespace std;
 
+long maxval = 42000000000;
 struct Matrix
 {
 	double** matr;
@@ -21,7 +22,7 @@ Matrix readMatrix(char* adr, Matrix m)
 	m.rows = 0;
 	char* c;
 	char* buf;
-	double* tmp = new double[1000000];
+	double* tmp = new double[maxval];
 	int col = 0;
 	int prevcol = 0;
 	int row = 0;
