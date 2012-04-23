@@ -17,15 +17,19 @@ struct Matrix
 bool readMatrix(char* adr, Matrix &m)
 {
 	FILE *M;
-	M = fopen(adr, "r");
-	if ( M == NULL) return false; 
+	M = fopen(adr, "r+");
+	if ( !M ) 
+	{
+		printf("Matrix at \" %s \" not found\n", adr);
+		return false; 
+	}
 	m.cols = 0;
 	m.rows = 0;
 	char* c;
 	char* buf;
 	double* tmp = new double[maxval];//буфер для матрицы
 	int col = 0;
-	int prevcol = 0;
+	int prevcol = 0; //для сравнения, едина ли длина всех строк матрицы
 	int row = 0;
 	int count = 0;
 	size_t len = 0;
@@ -41,9 +45,14 @@ bool readMatrix(char* adr, Matrix &m)
 			count++;
 			col ++;
 			buf = strtok(NULL, " ");
+			//printf("\"%s\"\n",buf);
 		}
 		row ++;
-		if ((prevcol != col) && (row != 1)) {cout << "Wrong array size!\n"; exit(1);};
+		if ((prevcol != col) && (row != 1)) 
+		{
+			printf("Wrong array size!\n");
+			return false;
+		}; // не совпали строки по длине(
 	}
 
 	m.cols = col-1;
@@ -54,19 +63,24 @@ bool readMatrix(char* adr, Matrix &m)
 		m.matr[i] = new double[m.rows];
 		
 	for (int i = 0; i < m.cols; i++)
+	{
 		for (int j = 0; j < m.rows; j++)
 		{
-			m.matr[i][j] = tmp[i+j*m.cols];
+			m.matr[i][j] = tmp[i+j*(col)];
+			printf("\"%f\" ",m.matr[i][j]);
 		}
+		printf("\n");
+	}
+		printf("read it!!!\n");
+		printf("cols: %d, rows: %d\n", m.cols, m.rows);
 	delete[] tmp;
 	return true;
-	
 };
 
-void summ(Matrix m1, Matrix m2, Matrix &sum, FILE *file = NULL)
+void summ(Matrix m1, Matrix m2, Matrix &sum, FILE *file)
 {
 	if ((m1.cols != m2.cols) || (m1.rows != m2.rows))
-		{cout << "Array sizes don't match\n"; exit(1);};
+		{printf("Array sizes don't match\n"); exit(1);};
 	
 	sum.matr = new double*[m1.cols];
 	for (int i = 0; i < m1.cols; i++)
@@ -77,7 +91,7 @@ void summ(Matrix m1, Matrix m2, Matrix &sum, FILE *file = NULL)
 		#pragma omp parallel for
 		for (int j = 0; j < m1.rows; j++)
 		{
-			sum.matr[j][i] = m1.matr[j][i] + m2.matr[j][i];
+			sum.matr[i][j] = m1.matr[i][j] + m2.matr[i][j];
 		}
 	sum.cols = m1.cols;
 	sum.rows = m1.rows;
@@ -101,4 +115,39 @@ void summ(Matrix m1, Matrix m2, Matrix &sum, FILE *file = NULL)
 			}
 	}
 };
+
+void multiply(Matrix m1, Matrix m2, Matrix &mult, FILE *file)
+{
+	double tmp = 0.0;
+	
+	//if (m1.cols != m2.rows)
+		//{printf("Array sizes don't match\n"); exit(1);};
+		
+	printf("m1 c:%d r:%d m2 c:%d r:%d\n", m1.cols, m1.rows, m2.cols, m2.rows);
+	mult.matr = new double*[m2.cols];
+		for (int i = 0; i < m2.cols; i++)
+			mult.matr[i] = new double[m1.rows];
+	
+	mult.cols = m2.cols;
+	mult.rows = m1.rows;
+	
+	printf("cols: %d, rows: %d\n", mult.cols, mult.rows);
+	
+	/*for (int i = 0; i < m1.rows; i++)
+	{
+		for (int j = 0; j < m1.cols; j++)
+			printf("[%d,%d] = %f", i, j, m1.matr[j][i]);
+		printf("\n");
+	}*/
+	
+	for (int k = 0; k < m2.cols; k++)
+	{
+		for (int j = 0; j < m1.rows; j++)
+		{
+			for (int i = 0; i < m1.cols; i++)
+				tmp += m1.matr[j][i]*m2.matr[i][k];
+			mult.matr[j][k] = tmp;
+		}
+	}
+}
 
