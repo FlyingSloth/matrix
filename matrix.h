@@ -1,4 +1,3 @@
-#include "iostream"
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
@@ -7,22 +6,24 @@
 #include "sstream"
 using namespace std;
 
-long maxval = 42000000000;
+unsigned long maxval = 50000000;
+
 struct Matrix
 {
 	double** matr;
 	int cols, rows;
 };
 
-Matrix readMatrix(char* adr, Matrix m)
+bool readMatrix(char* adr, Matrix &m)
 {
 	FILE *M;
 	M = fopen(adr, "r");
+	if ( M == NULL) return false; 
 	m.cols = 0;
 	m.rows = 0;
 	char* c;
 	char* buf;
-	double* tmp = new double[maxval];
+	double* tmp = new double[maxval];//буфер для матрицы
 	int col = 0;
 	int prevcol = 0;
 	int row = 0;
@@ -37,20 +38,17 @@ Matrix readMatrix(char* adr, Matrix m)
 		while(buf != NULL)
 		{
 			tmp[count] = atof(buf);
-			//cout << tmp[count] << " ";
 			count++;
 			col ++;
 			buf = strtok(NULL, " ");
 		}
 		row ++;
 		if ((prevcol != col) && (row != 1)) {cout << "Wrong array size!\n"; exit(1);};
-		//cout << "\n";
 	}
 
-	m.cols = col;
+	m.cols = col-1;
 	m.rows = row;
 	
-	//cout << col << " " << row << "\n";
 	m.matr = new double*[m.cols];
 	for (int i = 0; i < m.cols; i++)
 		m.matr[i] = new double[m.rows];
@@ -59,27 +57,17 @@ Matrix readMatrix(char* adr, Matrix m)
 		for (int j = 0; j < m.rows; j++)
 		{
 			m.matr[i][j] = tmp[i+j*m.cols];
-			//cout << "[" << i << "][" << j<< "]" << m.matr[i][j] << "\n";
 		}
 	delete[] tmp;
-	/*
-	for (int i = 0; i < m.rows; i++)
-		for (int j = 0; j < m.cols; j++)
-		{
-			printf("[%d][%d] %f ", i, j, m.matr[i][j]);
-			cout << "\n";
-		}
-	*/
-	return m;
+	return true;
 	
 };
 
-Matrix summ(Matrix m1, Matrix m2)
+void summ(Matrix m1, Matrix m2, Matrix &sum, FILE *file = NULL)
 {
 	if ((m1.cols != m2.cols) || (m1.rows != m2.rows))
 		{cout << "Array sizes don't match\n"; exit(1);};
 	
-	Matrix sum;
 	sum.matr = new double*[m1.cols];
 	for (int i = 0; i < m1.cols; i++)
 		sum.matr[i] = new double[m1.rows];
@@ -88,7 +76,29 @@ Matrix summ(Matrix m1, Matrix m2)
 	for (int i = 0; i < m1.cols; i++)
 		#pragma omp parallel for
 		for (int j = 0; j < m1.rows; j++)
-			sum.matr[i][j] = m1.matr[i][j] + m2.matr[i][j];
-	return sum;
+		{
+			sum.matr[j][i] = m1.matr[j][i] + m2.matr[j][i];
+		}
+	sum.cols = m1.cols;
+	sum.rows = m1.rows;
+
+	if (file == NULL)
+	{
+		for (int i = 0; i <sum.rows; i++)
+			{
+				for (int j = 0; j < sum.cols; j++)
+					printf("%f ", sum.matr[j][i]);
+				printf("\n");
+			}
+	}
+	else
+	{
+		for (int i = 0; i <sum.rows; i++)
+			{
+				for (int j = 0; j < sum.cols; j++)
+					fprintf(file, "%f ", sum.matr[j][i]);
+				fprintf(file, "\n");
+			}
+	}
 };
 
