@@ -63,16 +63,19 @@ bool readMatrix(char* adr, Matrix &m)
 		m.matr[i] = new double[m.rows];
 		
 	for (int i = 0; i < m.cols; i++)
-	{
 		for (int j = 0; j < m.rows; j++)
-		{
 			m.matr[i][j] = tmp[i+j*(col)];
+
+	/*for (int j = 0; j < m.rows; j++)
+	{
+		for (int i = 0; i < m.cols; i++)
+		{
 			printf("\"%f\" ",m.matr[i][j]);
 		}
 		printf("\n");
 	}
 		printf("read it!!!\n");
-		printf("cols: %d, rows: %d\n", m.cols, m.rows);
+		printf("cols: %d, rows: %d\n", m.cols, m.rows);*/
 	delete[] tmp;
 	return true;
 };
@@ -131,23 +134,39 @@ void multiply(Matrix m1, Matrix m2, Matrix &mult, FILE *file)
 	mult.cols = m2.cols;
 	mult.rows = m1.rows;
 	
-	printf("cols: %d, rows: %d\n", mult.cols, mult.rows);
+	/*printf("cols: %d, rows: %d\n", mult.cols, mult.rows);
 	
-	/*for (int i = 0; i < m1.rows; i++)
+	for (int i = 0; i < m1.rows; i++)
 	{
 		for (int j = 0; j < m1.cols; j++)
 			printf("[%d,%d] = %f", i, j, m1.matr[j][i]);
 		printf("\n");
 	}*/
 	
-	for (int k = 0; k < m2.cols; k++)
+	int i,j,k;
+	for (k = 0; k < m2.cols; k++)
 	{
-		for (int j = 0; j < m1.rows; j++)
+		for (j = 0; j < m1.rows; j++)
 		{
-			for (int i = 0; i < m1.cols; i++)
-				tmp += m1.matr[j][i]*m2.matr[i][k];
-			mult.matr[j][k] = tmp;
+			for (i = 0; i < m1.cols; i++)
+			{
+				tmp += m1.matr[i][j]*m2.matr[k][i];
+				//printf("%d %d %d %f %f %f\n",k,j,i, m1.matr[j][i],m2.matr[i][k], tmp);
+			}
+			mult.matr[k][j] = tmp;
+			tmp = 0;
+			//printf("%f ",mult.matr[k][j]);
 		}
+//		printf("\n");
+	}
+	
+	for (int j = 0; j < mult.rows; j++)
+	{
+		for (int i = 0; i < mult.cols; i++)
+		{
+			printf("\"%f\" ",mult.matr[i][j]);
+		}
+		printf("\n");
 	}
 }
 
