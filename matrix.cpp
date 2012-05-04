@@ -17,7 +17,10 @@ int main(int argc, char** argv)
 	FILE* out = NULL;
 	
 	if (argc == 1)
+	{
+		//cout << argc << "\n";
 		help(argv[0]);
+	}
 	else
 	{
 		static struct option long_options[] = {
@@ -25,7 +28,9 @@ int main(int argc, char** argv)
 		                   {"summ",  			1, 0, 's'},
 		                   {"read",  			1, 0, 'r'},
 		                   {"mult",  			1, 0, 'm'},
-		                   {"help",  			1, 0, 'h'},
+		                   {"detm",  			1, 0, 'd'},
+						   {"umin",  			1, 0, 'u'},
+		                   {"help",  			0, 0, 'h'},
 		                   {0, 				    0, 0,  0 }
 		               };
 
@@ -38,7 +43,7 @@ int main(int argc, char** argv)
 		    int option_index = 0;
 		    strcpy(foname, "$none$");
 
-		    while( (c=getopt_long (argc, argv, "o:s:r:m:", long_options, &option_index)) !=-1)
+		    while( (c=getopt_long (argc, argv, "o:s:r:m:u:d:h", long_options, &option_index)) !=-1)
 		    {
 		        switch(c)
 		        {
@@ -73,9 +78,20 @@ int main(int argc, char** argv)
 						}
 			            break;
 		            case 'r': // чтение матрицы
-		                readMatrix(optarg,m1);
+		            	readMatrix(optarg,m1, true, out);
 		                break;
+					case 'u':
+						if(readMatrix(optarg,m1))
+						{
+							uminus(m1,out);
+						}
+						break;
+					case 'd':
+						readMatrix(optarg,m1);
+						cout << determ(m1) << "\n";
+						break;
 		            case 'h': // справка
+		            	//cout << "HELP\n";
 		                help(argv[0]);
 		                break;
 		            default:
@@ -89,8 +105,11 @@ int main(int argc, char** argv)
 void help(char* arg)
 {
 	printf("\t\t\t=== Usage ===\n");
-	printf("--help, -h  - this message\n");
-	printf("--out, -o - path to output(result) file\n");
-	printf("--summ, -s  - summarise, ex:\" %s \" -s \"matrix1 matrix2\". Returns summary of 2 matrixes\n",arg);	
+	printf("--help, -h - this message\n\n");
+	printf("--read, -r - read matrix\n\n");
+	printf("--out,  -o - path to output(result) file. \n\tIf used with \"-r\", copies matrix \n\t(command: \"%s -o output -r inputmatrix \")\n\n",arg);
+	printf("--summ, -s - summarise, ex:\"%s -s \"matrix1 matrix2\"\". \n\t   Returns summary of 2 matrixes\n\n",arg);	
+	printf("--mult, -m - multiplication, ex:\"%s -m \"matrix1 matrix2\"\".\n\t   Returns product of 2 matrixes\n\n",arg);
+	printf("--umin, -u - unary minus\n\n");
 }
 

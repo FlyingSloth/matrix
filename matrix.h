@@ -14,7 +14,29 @@ struct Matrix
 	int cols, rows;
 };
 
-bool readMatrix(char* adr, Matrix &m)
+void print(Matrix result, FILE *file)
+{
+	if (file == NULL)
+	{
+		for (int i = 0; i < result.rows; i++)
+			{
+				for (int j = 0; j < result.cols; j++)
+					printf("%f ", result.matr[j][i]);
+				printf("\n");
+			}
+	}
+	else
+	{
+		for (int i = 0; i <result.rows; i++)
+			{
+				for (int j = 0; j < result.cols; j++)
+					fprintf(file, "%f ", result.matr[j][i]);
+				fprintf(file, "\n");
+			}
+	}
+}
+
+bool readMatrix(char* adr, Matrix &m, bool flagPrint = false, FILE *file = NULL)
 {
 	FILE *M;
 	M = fopen(adr, "r+");
@@ -45,7 +67,6 @@ bool readMatrix(char* adr, Matrix &m)
 			count++;
 			col ++;
 			buf = strtok(NULL, " ");
-			//printf("\"%s\"\n",buf);
 		}
 		row ++;
 		if ((prevcol != col) && (row != 1)) 
@@ -65,20 +86,13 @@ bool readMatrix(char* adr, Matrix &m)
 	for (int i = 0; i < m.cols; i++)
 		for (int j = 0; j < m.rows; j++)
 			m.matr[i][j] = tmp[i+j*(col)];
-
-	/*for (int j = 0; j < m.rows; j++)
-	{
-		for (int i = 0; i < m.cols; i++)
-		{
-			printf("\"%f\" ",m.matr[i][j]);
-		}
-		printf("\n");
-	}
-		printf("read it!!!\n");
-		printf("cols: %d, rows: %d\n", m.cols, m.rows);*/
+	
+	if (flagPrint)
+		print(m, file);
 	delete[] tmp;
 	return true;
 };
+
 
 void summ(Matrix m1, Matrix m2, Matrix &sum, FILE *file)
 {
@@ -99,50 +113,23 @@ void summ(Matrix m1, Matrix m2, Matrix &sum, FILE *file)
 	sum.cols = m1.cols;
 	sum.rows = m1.rows;
 
-	if (file == NULL)
-	{
-		for (int i = 0; i <sum.rows; i++)
-			{
-				for (int j = 0; j < sum.cols; j++)
-					printf("%f ", sum.matr[j][i]);
-				printf("\n");
-			}
-	}
-	else
-	{
-		for (int i = 0; i <sum.rows; i++)
-			{
-				for (int j = 0; j < sum.cols; j++)
-					fprintf(file, "%f ", sum.matr[j][i]);
-				fprintf(file, "\n");
-			}
-	}
+	print(sum, file);
 };
 
 void multiply(Matrix m1, Matrix m2, Matrix &mult, FILE *file)
 {
 	double tmp = 0.0;
 	
-	//if (m1.cols != m2.rows)
-		//{printf("Array sizes don't match\n"); exit(1);};
-		
-	printf("m1 c:%d r:%d m2 c:%d r:%d\n", m1.cols, m1.rows, m2.cols, m2.rows);
+	if (m1.cols != m2.rows)
+		{printf("Array sizes don't match\n"); exit(1);};
+
 	mult.matr = new double*[m2.cols];
 		for (int i = 0; i < m2.cols; i++)
 			mult.matr[i] = new double[m1.rows];
 	
 	mult.cols = m2.cols;
 	mult.rows = m1.rows;
-	
-	/*printf("cols: %d, rows: %d\n", mult.cols, mult.rows);
-	
-	for (int i = 0; i < m1.rows; i++)
-	{
-		for (int j = 0; j < m1.cols; j++)
-			printf("[%d,%d] = %f", i, j, m1.matr[j][i]);
-		printf("\n");
-	}*/
-	
+
 	int i,j,k;
 	for (k = 0; k < m2.cols; k++)
 	{
@@ -151,22 +138,105 @@ void multiply(Matrix m1, Matrix m2, Matrix &mult, FILE *file)
 			for (i = 0; i < m1.cols; i++)
 			{
 				tmp += m1.matr[i][j]*m2.matr[k][i];
-				//printf("%d %d %d %f %f %f\n",k,j,i, m1.matr[j][i],m2.matr[i][k], tmp);
 			}
 			mult.matr[k][j] = tmp;
 			tmp = 0;
-			//printf("%f ",mult.matr[k][j]);
 		}
-//		printf("\n");
 	}
 	
-	for (int j = 0; j < mult.rows; j++)
+	print(mult, file);
+}
+
+Matrix uminus(Matrix m, FILE *file)
+{
+	#pragma omp parallel for
+	for (int j = 0; j < m.rows; j++)
 	{
-		for (int i = 0; i < mult.cols; i++)
+		for (int i = 0; i < m.cols; i++)
 		{
-			printf("\"%f\" ",mult.matr[i][j]);
+			m.matr[i][j]*=-1;
 		}
-		printf("\n");
 	}
+	
+	print(m, file);
+}
+
+void minors(Matrix m, Matrix* mbuf)
+{
+	if (m.cols != m.rows)
+	{
+		printf("Wrong array size! Cols != Rows\n");
+		exit(1);
+	}
+	//mbuf = new Matrix[m.cols];
+
+	int c = 0;
+	for (int co = 0; co < m.cols; co++)
+	{
+		mbuf[co].cols = m.cols-1;
+		mbuf[co].rows = m.rows-1;
+		mbuf[co].matr = new double*[mbuf[co].cols];
+		for (int i = 0; i < mbuf[co].cols; i++)
+		{
+			mbuf[co].matr[i] = new double[mbuf[co].rows];
+		}
+	}
+	for (int i = 0; i < m.cols; i++)
+	{
+		for (int k = 0; k < mbuf[i].rows; k++)
+		{
+			c = 0;
+			for (int l = 0; l < mbuf[i].cols; l++)
+			{
+				if (c < i)
+				{
+					mbuf[i].matr[l][k] = m.matr[l][k+1];
+				}
+				if (c>=i)
+				{
+					mbuf[i].matr[l][k] = m.matr[l+1][k+1];
+				}
+			c++;
+			}
+		}
+	}
+	/*for (int i = 0; i < m.cols; i++)
+	{
+		print(mbuf[i], NULL);
+		printf("\n");
+	}*/
+}
+
+double determ(Matrix m,int coef = 1)
+{
+	double det = 0;
+	Matrix mbuf[m.cols];
+	if (m.cols != 2)
+	{
+		minors(m,mbuf);
+		for (int i = 0; i < m.cols; i++)
+		{
+			det += coef*determ(mbuf[i],coef)*m.matr[i][0];
+			printf("c %d  m %f \n", coef,m.matr[i][0]);
+			coef*=-1;
+		}
+	}
+	if (m.cols == 2) 
+	{
+		det = (m.matr[0][0]*m.matr[1][1]-m.matr[0][1]*m.matr[1][0]);
+		printf("%f\n", det);
+	}
+	return det;
+	/*
+	for (int i = 0; i < m.cols; i++)
+	{
+		print(mbuf[i], NULL);
+		printf("\n");
+	}*/
+	//return 0;
+	/*else
+	{
+		return (m.matr[0][0]*m.matr[1][1]-m.matr[0][1]*m.matr[1][0]);
+	}*/
 }
 
